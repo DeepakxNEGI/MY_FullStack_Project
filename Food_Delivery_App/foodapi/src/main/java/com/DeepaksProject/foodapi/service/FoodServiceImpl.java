@@ -1,70 +1,58 @@
 package com.DeepaksProject.foodapi.service;
 
+
 import lombok.AllArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.DeepaksProject.foodapi.entity.FoodEntity;
 import com.DeepaksProject.foodapi.io.FoodRequest;
 import com.DeepaksProject.foodapi.io.FoodResponse;
 import com.DeepaksProject.foodapi.repository.FoodRepository;
 
-// import software.amazon.awssdk.core.sync.RequestBody;
-// import software.amazon.awssdk.services.s3.S3Client;
-// import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-// import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-// import software.amazon.awssdk.services.s3.model.PutObjectResponse;
-
-import java.io.IOException;
+import java.io.File;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
-
+@AllArgsConstructor
 @Service
 public class FoodServiceImpl implements FoodService{
 
-    // @Autowired
-    // private S3Client s3Client;
     @Autowired
     private FoodRepository foodRepository;
-
-    // @Value("${aws.s3.bucketname}")
-    // private String bucketName;
-
-    // @Override
-    // public String uploadFile(MultipartFile file) {
-    //     String filenameExtension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")+1);
-    //     String key = UUID.randomUUID().toString()+"."+filenameExtension;
-    //     try {
-    //         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-    //                 .bucket(bucketName)
-    //                 .key(key)
-    //                 .acl("public-read")
-    //                 .contentType(file.getContentType())
-    //                 .build();
-    //         PutObjectResponse response = s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
-
-    //         if (response.sdkHttpResponse().isSuccessful()) {
-    //             return "https://"+bucketName+".s3.amazonaws.com/"+key;
-    //         } else {
-    //             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed");
-    //         }
-    //     }catch (IOException ex) {
-    //         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occured while uploading the file");
-    //     }
-    // }
 
     @Override
     public FoodResponse addFood(FoodRequest request, MultipartFile file) {
         FoodEntity newFoodEntity = convertToEntity(request);
-        String imageUrl = uploadFile(file);
-        newFoodEntity.setImageUrl(imageUrl);
+
+        // Save the file locally
+        String filePath = saveFileLocally(file);
+        newFoodEntity.setImageUrl(filePath); // Save the file path in the database
+
+        // Save the food entity to MongoDB
         newFoodEntity = foodRepository.save(newFoodEntity);
         return convertToResponse(newFoodEntity);
+    }
+
+    private String saveFileLocally(MultipartFile file) {
+        try {
+            // Define the directory to save the file
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            File directory = new File(uploadDir);
+            if (!directory.exists()) {
+                directory.mkdirs(); // Create the directory if it doesn't exist
+            }
+
+            // Save the file
+            String filePath = uploadDir + file.getOriginalFilename();
+            File destinationFile = new File(filePath);
+            file.transferTo(destinationFile);
+
+            return filePath; // Return the file path
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to save file locally", e);
+        }
     }
 
     @Override
@@ -80,24 +68,8 @@ public class FoodServiceImpl implements FoodService{
     }
 
     @Override
-    public boolean deleteFile(String filename) {
-        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(filename)
-                .build();
-        s3Client.deleteObject(deleteObjectRequest);
-        return true;
-    }
-
-    @Override
     public void deleteFood(String id) {
-        FoodResponse response = readFood(id);
-        String imageUrl = response.getImageUrl();
-        String filename = imageUrl.substring(imageUrl.lastIndexOf("/")+1);
-        boolean isFileDelete = deleteFile(filename);
-        if (isFileDelete) {
-            foodRepository.deleteById(response.getId());
-        }
+        foodRepository.deleteById(id);
     }
 
     private FoodEntity convertToEntity(FoodRequest request) {
@@ -119,5 +91,13 @@ public class FoodServiceImpl implements FoodService{
                 .price(entity.getPrice())
                 .imageUrl(entity.getImageUrl())
                 .build();
+    }
+
+
+
+    @Override
+    public boolean deleteFile(String filename) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteFile'");
     }
 }

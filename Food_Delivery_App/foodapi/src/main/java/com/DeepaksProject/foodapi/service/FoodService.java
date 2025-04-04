@@ -1,5 +1,6 @@
 package com.DeepaksProject.foodapi.service;
 
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.DeepaksProject.foodapi.io.FoodRequest;
@@ -9,7 +10,7 @@ import java.util.List;
 
 public interface FoodService {
 
-    //String uploadFile(MultipartFile file);
+  //
 
     FoodResponse addFood(FoodRequest request, MultipartFile file);
 
