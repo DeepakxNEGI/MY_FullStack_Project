@@ -37,19 +37,18 @@ public class FoodServiceImpl implements FoodService{
 
     private String saveFileLocally(MultipartFile file) {
         try {
-            // Define the directory to save the file
-            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            // Save to static/uploads so Spring Boot can serve it
+            String uploadDir = new File("src/main/resources/static/uploads/").getAbsolutePath();
             File directory = new File(uploadDir);
             if (!directory.exists()) {
-                directory.mkdirs(); // Create the directory if it doesn't exist
+                directory.mkdirs();
             }
 
-            // Save the file
-            String filePath = uploadDir + file.getOriginalFilename();
+            String filePath = uploadDir + File.separator + file.getOriginalFilename();
             File destinationFile = new File(filePath);
             file.transferTo(destinationFile);
 
-            return filePath; // Return the file path
+            return "uploads/" + file.getOriginalFilename(); // relative path for frontend
         } catch (Exception e) {
             throw new RuntimeException("Failed to save file locally", e);
         }
@@ -69,6 +68,17 @@ public class FoodServiceImpl implements FoodService{
 
     @Override
     public void deleteFood(String id) {
+        FoodEntity food = foodRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Food not found"));
+
+        // Extract filename from imageUrl
+        String imageUrl = food.getImageUrl(); // e.g. "uploads/image.jpg"
+        String filename = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+
+        // Delete file from storage
+        deleteFile(filename);
+
+        // Delete from MongoDB
         foodRepository.deleteById(id);
     }
 
@@ -97,7 +107,13 @@ public class FoodServiceImpl implements FoodService{
 
     @Override
     public boolean deleteFile(String filename) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteFile'");
+        try {
+            String uploadDir = new File("src/main/resources/static/uploads/").getAbsolutePath();
+            File fileToDelete = new File(uploadDir + File.separator + filename);
+            return fileToDelete.exists() && fileToDelete.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
