@@ -38,7 +38,7 @@ public class FoodServiceImpl implements FoodService{
     private String saveFileLocally(MultipartFile file) {
         try {
             // Save to static/uploads so Spring Boot can serve it
-            String uploadDir = new File("src/main/resources/static/uploads/").getAbsolutePath();
+            String uploadDir = new File("foodapi/src/main/resources/static/uploads/").getAbsolutePath();
             File directory = new File(uploadDir);
             if (!directory.exists()) {
                 directory.mkdirs();
@@ -48,7 +48,7 @@ public class FoodServiceImpl implements FoodService{
             File destinationFile = new File(filePath);
             file.transferTo(destinationFile);
 
-            return "uploads/" + file.getOriginalFilename(); // relative path for frontend
+            return "http://localhost:8080/uploads/" + file.getOriginalFilename(); // relative path for frontend
         } catch (Exception e) {
             throw new RuntimeException("Failed to save file locally", e);
         }
@@ -108,7 +108,7 @@ public class FoodServiceImpl implements FoodService{
     @Override
     public boolean deleteFile(String filename) {
         try {
-            String uploadDir = new File("src/main/resources/static/uploads/").getAbsolutePath();
+            String uploadDir = new File("src/main/resources/static/uploads").getAbsolutePath();
             File fileToDelete = new File(uploadDir + File.separator + filename);
             return fileToDelete.exists() && fileToDelete.delete();
         } catch (Exception e) {
