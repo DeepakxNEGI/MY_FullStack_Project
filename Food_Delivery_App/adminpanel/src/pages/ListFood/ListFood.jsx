@@ -50,7 +50,7 @@ const ListFood = () => {
               return (
                 <tr key={index}>
                   <td>
-                    <img src={`http://localhost:8080/${item.imageUrl}`} alt="" height={48} width={48} />
+                    <img src={item.imageUrl} alt="" height={48} width={48} />
                   </td>
                   <td>{item.name}</td>
                   <td>{item.category}</td>
