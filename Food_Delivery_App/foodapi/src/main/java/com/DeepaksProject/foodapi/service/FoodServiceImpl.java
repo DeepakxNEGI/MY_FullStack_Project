@@ -37,18 +37,20 @@ public class FoodServiceImpl implements FoodService{
 
     private String saveFileLocally(MultipartFile file) {
         try {
-            // Save to static/uploads so Spring Boot can serve it
-            String uploadDir = new File("foodapi/src/main/resources/static/uploads/").getAbsolutePath();
+            // Dynamically construct the absolute path to the static/uploads directory
+            String uploadDir = System.getProperty("user.dir") + "/src/main/resources/static/uploads/";
             File directory = new File(uploadDir);
             if (!directory.exists()) {
-                directory.mkdirs();
+                directory.mkdirs(); // Create the directory if it doesn't exist
             }
 
+            // Save the file to the constructed path
             String filePath = uploadDir + File.separator + file.getOriginalFilename();
             File destinationFile = new File(filePath);
             file.transferTo(destinationFile);
 
-            return "http://localhost:8080/uploads/" + file.getOriginalFilename(); // relative path for frontend
+            // Return the relative path for the frontend
+            return "http://localhost:8080/uploads/" + file.getOriginalFilename();
         } catch (Exception e) {
             throw new RuntimeException("Failed to save file locally", e);
         }
