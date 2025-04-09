@@ -1,0 +1,1 @@
+export const RAZORPAY_KEY = "your_razorpay_public_key";
