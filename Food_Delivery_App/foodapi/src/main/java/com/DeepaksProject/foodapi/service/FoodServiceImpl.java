@@ -37,8 +37,8 @@ public class FoodServiceImpl implements FoodService{
 
     private String saveFileLocally(MultipartFile file) {
         try {
-            // Dynamically construct the absolute path to the static/uploads directory
-            String uploadDir = System.getProperty("user.dir") + "/src/main/resources/static/uploads/";
+            // Get the absolute path to the static/uploads directory using the classpath
+            String uploadDir = new File("src/main/resources/static/uploads").getAbsolutePath();
             File directory = new File(uploadDir);
             if (!directory.exists()) {
                 directory.mkdirs(); // Create the directory if it doesn't exist
